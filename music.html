@@ -166,7 +166,7 @@
         for(var i = 0; i < this.n; i++){
             var angle = 2 * Math.PI / this.n * i;
             var standard = 130;
-            var item = arr[i+this.n] - standard > 0 ? (arr[i+this.n] - standard)/2.55 : 0;
+            var item = arr[i+this.n] - standard > 0 ? arr[i+this.n] - standard : 0;
 
             this.ctx.beginPath();
             var x = R * Math.cos(angle);
