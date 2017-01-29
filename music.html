@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style>
+        html{
+            overflow: hidden;
+            min-width: 1024px;
+        }
+        body{
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            background-image: url("./yourname.jpg");
+            background-size: 100% 100%;
+        }
+        canvas{
+            background-color: rgba(162, 162, 162, 0.2);
+        }
+        #f{
+            position: absolute;
+            left: 0;
+            top: 0;
+        }
+    </style>
+</head>
+<body>
+<canvas id="canvas">
+    您的浏览器不支持canvas。
+</canvas>
+
+<input type="file" id="f" />
+
+<script>
+
+    function Audio( props ) {
+        if ( props.canvas === undefined || props.canvas instanceof HTMLCanvasElement === false){
+            throw new Error('the canvas is not defined');
+            return;
+        }
+        if ( props.file === undefined ){
+            throw new Error('the file is not defined');
+            return;
+        }
+        // 获取canvas
+        this.canvas = props.canvas;
+        this.file = props.file;
+        this.ctx = this.canvas.getContext('2d');
+        // 获取屏幕宽高并设置
+        this.W = document.body.clientWidth || window.innerWidth;
+        this.H = window.innerHeight;
+
+        this.canvas.width = this.W;
+        this.canvas.height = this.H;
+        //设置每个圆的点数(默认为92个)
+        this.n = props.n || 92;
+        // 设置圆心
+        this.X = this.W/2;
+        this.Y = this.H/2;
+
+    }
+
+    Audio.prototype.fileChange = function(){
+        var _this = this;
+        this.file.onchange = function(){
+            var musicFile = this.files[0];
+            // 解析文件
+            var fr = new FileReader();
+
+            // 解析完成的时候触发
+            fr.onload = function( ev ){
+                // 解析之后的数据
+                var data = ev.target.result;
+                var ac = new AudioContext();
+
+                ac.decodeAudioData( data, function( buffer ){
+
+                    var source = ac.createBufferSource();
+                    var analyser = ac.createAnalyser();
+
+                    source.connect(analyser);
+                    analyser.connect(ac.destination);
+
+                    source.buffer = buffer;
+                    source.loop = true;
+
+                    source.start(0);
+
+                    var arr = new Uint8Array(analyser.frequencyBinCount);
+
+                    // 按浏览器帧数获取频谱值并且绘画。
+                    renderBuffer();
+                    function renderBuffer(){
+                        requestAnimationFrame(function(){
+                            analyser.getByteFrequencyData(arr);
+
+                            _this.ctx.clearRect(0, 0, W, H);
+
+                            _this.ctx.save();
+                            _this.ctx.translate(X, Y);
+                            _this.ctx.lineWidth = 4;
+                            _this.ctx.lineCap = 'round';
+                            _this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
+
+                            _this.renderOuter( X*0.32, arr );
+                            _this.renderInner( X*0.3, arr );
+
+                            _this.ctx.restore();
+
+                            // 设置canvas的scale
+                            console.log( _this.getAverage(arr) )
+
+                            renderBuffer();
+                        });
+                    }
+                }, function(error){
+
+                });
+
+            }
+
+            fr.readAsArrayBuffer( musicFile );
+        }
+    }
+
+    Audio.prototype.renderOuter = function(R, arr){
+        for(var i = 0; i < this.n; i++){
+            var angle = 2 * Math.PI / n * i;
+            var standard = 130;
+            var item = arr[i] - standard > 0 ? arr[i] - standard : 0;
+
+            this.ctx.beginPath();
+            var x = R * Math.cos(angle);
+            var y = R * Math.sin(angle);
+
+            var targetX = (R + item) * Math.cos(angle);
+            var targetY = (R + item) * Math.sin(angle);
+
+            this.ctx.moveTo(x, y);
+            this.ctx.lineTo(targetX, targetY);
+            this.ctx.stroke();
+        }
+    }
+
+    Audio.prototype.renderInner = function(R, arr){
+        for(var i = 0; i < this.n; i++){
+            var angle = 2 * Math.PI / n * i;
+            var standard = 130;
+            var item = arr[i+this.n] - standard > 0 ? (arr[i+this.n] - standard)/2.55 : 0;
+
+            this.ctx.beginPath();
+            var x = R * Math.cos(angle);
+            var y = R * Math.sin(angle);
+
+            var targetX = (R - item) * Math.cos(angle);
+            var targetY = (R - item) * Math.sin(angle);
+
+            this.ctx.moveTo(x, y);
+            this.ctx.lineTo(targetX, targetY);
+            this.ctx.stroke();
+        }
+    }
+    // 获取数组中的平均值
+    Audio.prototype.getAverage = function( arr ){
+        var num = 0;
+        for( var i = 0; i < arr.length; i++ ){
+            num += arr[i];
+        }
+        return num / arr.length;
+    }
+</script>
+</body>
+</html>
