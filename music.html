@@ -11,9 +11,11 @@
         body{
             margin: 0;
             padding: 0;
-            width: 100%;
+        }
+        .app{
             background-image: url("./yourname.jpg");
             background-size: 100% 100%;
+            background-repeat: no-repeat;
         }
         canvas{
             background-color: rgba(162, 162, 162, 0.2);
@@ -26,9 +28,11 @@
     </style>
 </head>
 <body>
-<canvas id="canvas">
-    您的浏览器不支持canvas。
-</canvas>
+<div class="app">
+    <canvas id="canvas">
+        您的浏览器不支持canvas。
+    </canvas>
+</div>
 
 <input type="file" id="f" />
 
@@ -47,22 +51,36 @@
         this.canvas = props.canvas;
         this.file = props.file;
         this.ctx = this.canvas.getContext('2d');
+        // 设置每个圆的点数(默认为92个)
+        this.n = props.n || 92;
+
+        // 初始化canvas
+        this.init();
+
+    }
+
+    Audio.prototype.init = function(){
         // 获取屏幕宽高并设置
-        this.W = document.body.clientWidth || window.innerWidth;
+        this.W = window.innerWidth;
         this.H = window.innerHeight;
 
         this.canvas.width = this.W;
         this.canvas.height = this.H;
-        //设置每个圆的点数(默认为92个)
-        this.n = props.n || 92;
+
         // 设置圆心
         this.X = this.W/2;
         this.Y = this.H/2;
+
+        // 改变窗口大小函数
+        this.resize();
+        // 运行文件change时间
+        this.fileChange();
 
     }
 
     Audio.prototype.fileChange = function(){
         var _this = this;
+        console.log(this)
         this.file.onchange = function(){
             var musicFile = this.files[0];
             // 解析文件
@@ -95,21 +113,22 @@
                         requestAnimationFrame(function(){
                             analyser.getByteFrequencyData(arr);
 
-                            _this.ctx.clearRect(0, 0, W, H);
+                            _this.ctx.clearRect(0, 0, _this.W, _this.H);
 
                             _this.ctx.save();
-                            _this.ctx.translate(X, Y);
+                            _this.ctx.translate(_this.X, _this.Y);
+                            console.log(_this.X, _this.Y)
                             _this.ctx.lineWidth = 4;
                             _this.ctx.lineCap = 'round';
                             _this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
 
-                            _this.renderOuter( X*0.32, arr );
-                            _this.renderInner( X*0.3, arr );
+                            _this.renderOuter( _this.X*0.32, arr );
+                            _this.renderInner( _this.X*0.3, arr );
 
                             _this.ctx.restore();
 
                             // 设置canvas的scale
-                            console.log( _this.getAverage(arr) )
+                            this.canvas.parentNode.style.transform = 'scale('+ (_this.getAverage(arr)/2000 + 1) +')';
 
                             renderBuffer();
                         });
@@ -126,7 +145,7 @@
 
     Audio.prototype.renderOuter = function(R, arr){
         for(var i = 0; i < this.n; i++){
-            var angle = 2 * Math.PI / n * i;
+            var angle = 2 * Math.PI / this.n * i;
             var standard = 130;
             var item = arr[i] - standard > 0 ? arr[i] - standard : 0;
 
@@ -145,7 +164,7 @@
 
     Audio.prototype.renderInner = function(R, arr){
         for(var i = 0; i < this.n; i++){
-            var angle = 2 * Math.PI / n * i;
+            var angle = 2 * Math.PI / this.n * i;
             var standard = 130;
             var item = arr[i+this.n] - standard > 0 ? (arr[i+this.n] - standard)/2.55 : 0;
 
@@ -169,6 +188,17 @@
         }
         return num / arr.length;
     }
+    Audio.prototype.resize = function(){
+        var _this = this;
+        window.onresize = function(){
+            _this.init();
+        };
+    }
+
+    var music = new Audio({
+        canvas: document.getElementById('canvas'),
+        file: document.getElementById('f')
+    })
 </script>
 </body>
 </html>
