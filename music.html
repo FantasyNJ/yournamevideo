@@ -37,7 +37,12 @@
 <input type="file" id="f" />
 
 <script>
-
+    /*
+    * props
+    *   canvas
+    *   f
+    *   n
+    * */
     function Audio( props ) {
         if ( props.canvas === undefined || props.canvas instanceof HTMLCanvasElement === false){
             throw new Error('the canvas is not defined');
