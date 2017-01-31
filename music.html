@@ -121,9 +121,19 @@
 
                             _this.ctx.save();
                             _this.ctx.translate(_this.X, _this.Y);
+
+                            var gradient = _this.ctx.createRadialGradient(0, 0, 0, 0, 0, _this.X*0.5);
+                            gradient.addColorStop(0, 'rgba(255, 255, 255, 0.7)');
+                            gradient.addColorStop(0.5, 'rgba(255, 255, 255, 0.7)');
+//                            gradient.addColorStop(0.5, 'rgba(227, 27, 254, 0.7)');
+                            gradient.addColorStop(0.6, 'rgba(254, 44, 168, 0.7)');
+                            gradient.addColorStop(0.63, 'rgba(44, 207, 254, 0.7)');
+                            gradient.addColorStop(1, 'rgba(255, 255, 255, 0.7)');
+
                             _this.ctx.lineWidth = 4;
                             _this.ctx.lineCap = 'round';
-                            _this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
+//                            _this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
+                            _this.ctx.strokeStyle = gradient;
 
                             _this.renderOuter( _this.X*0.32, arr );
                             _this.renderInner( _this.X*0.3, arr );
